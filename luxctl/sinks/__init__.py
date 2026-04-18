@@ -37,3 +37,10 @@ from .luxafor import LuxaforSink  # noqa: E402
 from .log import LogSink  # noqa: E402
 
 __all__ = ["Sink", "LuxaforSink", "LogSink"]
+
+
+def __getattr__(name):
+    if name == "SlackSink":
+        from .slack import SlackSink as _SS
+        return _SS
+    raise AttributeError(name)

@@ -31,7 +31,9 @@ test = ["pytest>=7"]
 tray = ["PyGObject>=3.42"]
 # CalendarSource: iCal parsing. recurring-ical-events handles RRULE.
 calendar = ["icalendar>=5", "recurring-ical-events>=2"]
-all = ["luxctl[tray,calendar]"]
+# SlackSink + SlackSource: official slack_sdk.
+slack = ["slack-sdk>=3"]
+all = ["luxctl[tray,calendar,slack]"]
 
 [project.scripts]
 luxctl = "luxctl.cli:main"

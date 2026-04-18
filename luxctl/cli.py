@@ -60,6 +60,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("daemon", help="Run the presence-aggregator daemon.")
 
+    from .slack_cli import add_slack_subparser
+    add_slack_subparser(sub)
+
     return parser
 
 
@@ -147,6 +150,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "logs":
         return _tail_logs(args.lines, args.follow)
+
+    if args.command == "slack":
+        return args.handler(args)
 
     try:
         with Controller() as ctrl:

@@ -64,9 +64,12 @@ __all__ = [
     "resolve",
 ]
 
-# CalendarSource is imported lazily because `icalendar` is an optional dep.
+# CalendarSource and SlackSource use optional deps — lazy import.
 def __getattr__(name):
     if name == "CalendarSource":
         from .calendar import CalendarSource as _CS
         return _CS
+    if name == "SlackSource":
+        from .slack import SlackSource as _SS
+        return _SS
     raise AttributeError(name)
