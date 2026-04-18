@@ -6,11 +6,11 @@ highest-priority non-None declaration.
 
 Today's sources:
 
-  * `ManualSource` — the user via CLI or tray.
-  * `IdleSource` — input-idleness detection (sets "offline"/"brb").
-  * `LockSource` — screen-lock state (sets "offline").
-  * `CalendarSource` — iCal feed; sets "meeting" while an event is on.
-  * `SlackSource` — reads Slack presence (active/away).
+  * `ManualSource` - the user via CLI or tray.
+  * `IdleSource` - input-idleness detection (sets "offline"/"brb").
+  * `LockSource` - screen-lock state (sets "offline").
+  * `CalendarSource` - iCal feed; sets "meeting" while an event is on.
+  * `SlackSource` - reads Slack presence (active/away).
 
 Each source declares a default `priority`. Higher beats lower. The
 intended order from low to high is:
@@ -64,7 +64,7 @@ __all__ = [
     "resolve",
 ]
 
-# CalendarSource and SlackSource use optional deps — lazy import.
+# CalendarSource and SlackSource use optional deps - lazy import.
 def __getattr__(name):
     if name == "CalendarSource":
         from .calendar import CalendarSource as _CS

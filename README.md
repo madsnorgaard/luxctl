@@ -1,8 +1,8 @@
 # luxctl
 
-A Linux command-line tool, GTK tray, and presence-aggregator daemon for the [Luxafor Flag](https://luxafor.com/product/flag/).
+A Linux command-line tool, GTK tray, and presence-aggregator daemon for the [Luxafor Flag](https://luxafor.com/product/flag/), a USB status light.
 
-Started as a personal "make the desk light show police siren when I am stressed" project, then grew into a small presence hub: multiple sources (calendar, screen lock, idle detection, Slack) declare what status I should be at, and the daemon reflects the resolved state outwards (Luxafor light, Slack profile + DND, transition log).
+luxctl pairs the physical light with a small **presence pipeline**: any number of *sources* (calendar, screen lock, idle detection, Slack presence, custom) declare what status should be shown, the daemon picks the highest-priority declaration, and any number of *sinks* (the Luxafor itself, your Slack profile and DND, a transition log, custom) reflect the resolved state outwards.
 
 ```
         Sources                 Daemon                 Sinks
@@ -13,55 +13,72 @@ Started as a personal "make the desk light show police siren when I am stressed"
    slack ───┘
 ```
 
+Vendor `04d8:f372` (Luxafor Flag). The base CLI also works for many Luxafor variants that share the protocol; unsupported pattern IDs are caught with a clear error.
+
 ## Quick start
 
 ```bash
 git clone https://github.com/madsnorgaard/luxctl
 cd luxctl
 sudo apt install libhidapi-hidraw0 libhidapi-libusb0
-pip install ".[all]"
+python3 -m venv --system-site-packages .venv
+.venv/bin/pip install -e ".[all]"
 
-# udev rule so you don't need sudo for every command:
+# udev rule so the device is writable without sudo:
 sudo cp udev/99-luxafor.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 sudo udevadm trigger --action=change --subsystem-match=usb --subsystem-match=hidraw
 
-# try it
-luxctl status available
-luxctl status stressed     # police siren
-luxctl status kid-incoming # pink pulse
-luxctl off
+# interactive setup (config + Slack + autostart):
+.venv/bin/luxctl init
+
+# verify everything:
+.venv/bin/luxctl doctor
 ```
 
-## Requirements
+If anything is wrong, `luxctl doctor` tells you exactly what to fix.
 
-- A Luxafor Flag (USB, vendor `04d8:f372`)
-- Linux with `hidapi` C library (`sudo apt install libhidapi-hidraw0 libhidapi-libusb0`)
-- Python 3.10 or newer
-
-For the **tray**: `sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1` and create the venv with `python3 -m venv --system-site-packages .venv` so it can see PyGObject.
-
-For the **daemon's optional sources**: `pip install ".[calendar]"` for iCal feeds, `pip install ".[slack]"` for Slack. Or just `pip install ".[all]"`.
-
-## CLI
+## Commands
 
 ```text
-luxctl status <name>       # apply a preset; --task "..." sets active task
-luxctl rgb R G B           # arbitrary colour
-luxctl off                 # back to black
-luxctl list                # list all presets
-luxctl current             # show last-applied state, source, task
-luxctl task "<text>"       # set the active task (persists across status changes)
+luxctl init                first-run wizard (config + Slack + systemd)
+luxctl doctor              audit install and config end-to-end
+
+luxctl status <name>       apply a preset; --task "..." sets active task
+luxctl rgb R G B           arbitrary colour
+luxctl off                 black
+luxctl list                list all presets (built-in + custom)
+luxctl current             show last-applied state, source, task
+luxctl task "<text>"       set the active task (persists across status changes)
 luxctl task --clear
-luxctl tray                # GNOME indicator
-luxctl daemon              # presence-aggregator loop
-luxctl logs -f             # tail the transition log
-luxctl slack setup         # walk through token creation
-luxctl slack test          # verify the saved token
-luxctl slack push          # push current state to Slack one-shot
+
+luxctl tray                GNOME indicator
+luxctl daemon              presence-aggregator loop (foreground)
+luxctl logs -f             tail the transition log
+luxctl stats [--week]      time spent per status
+
+luxctl install-service     install + enable + start systemd user service
+luxctl uninstall-service   stop, disable, remove
+luxctl service-status      is the daemon installed/active/enabled?
+
+luxctl slack setup         walk through Slack token creation
+luxctl slack test          verify the saved token
+luxctl slack push          push current state to Slack one-shot
 ```
 
-## Presets
+Tab completion: `pip install '.[completion]'`, then per-shell:
+
+```bash
+# bash
+eval "$(register-python-argcomplete luxctl)"
+# zsh
+autoload -U bashcompinit && bashcompinit
+eval "$(register-python-argcomplete luxctl)"
+# fish
+register-python-argcomplete --shell fish luxctl | source
+```
+
+## Built-in presets
 
 | Name | Behaviour |
 | --- | --- |
@@ -82,50 +99,41 @@ luxctl slack push          # push current state to Slack one-shot
 | `dnd` | Red strobe |
 | `offline` | Off |
 
-Add your own by editing `luxctl/statuses.py` — each status is a single function decorated with `@register`.
+## Custom presets (no Python needed)
+
+Add `[presets.*]` blocks to `~/.config/luxctl/config.toml`:
+
+```toml
+[presets.coding]
+static = [50, 200, 50]
+description = "Solid green-ish, hands on the keyboard."
+
+[presets.urgent]
+strobe = [255, 0, 0]
+speed = 5
+repeat = 30
+
+[presets.afk]
+fade = [80, 80, 80]
+speed = 60
+```
+
+Supported keys per preset: `static`, `fade`, `strobe`, `wave`, `pattern` (1-8). Modifiers: `speed`, `repeat`, `wave_type`. Re-using a built-in name overrides it.
 
 ## Active task
 
-The active task is free-form text that travels with whatever status is set. The Luxafor doesn't display text, but the tray menu shows it and the **SlackSink uses it as your Slack `status_text`**, so:
+The active task is free-form text that travels alongside the status. The Luxafor itself can't display text, but the tray menu shows it and the **Slack sink uses it as your Slack `status_text`**:
 
 ```bash
 luxctl task "Reviewing PR #1234"
-luxctl status busy           # task survives the status change
+luxctl status busy            # task survives the status change
 ```
 
-…appears in Slack as `🚫 Reviewing PR #1234`. `luxctl task --clear` removes it.
-
-## Tray indicator
-
-```bash
-luxctl tray
-```
-
-Menu shows the current state and active task at the top, then groups of presets (Everyday, Developer, Funny, Home office), then a "Set task…" entry, "Refresh", "Quit".
-
-To autostart it on login: drop a `.desktop` file in `~/.config/autostart/` pointing at `luxctl tray`. On Wayland (Ubuntu's default) you need the **AppIndicator and KStatusNotifierItem Support** GNOME extension; most desktop installs already ship it.
-
-## Daemon
-
-```bash
-luxctl daemon
-```
-
-Polls the configured sources every `tick_seconds` (default 5), resolves the highest-priority declaration, and pushes the resulting `ComputedState` to every configured sink. Source exceptions are caught and logged; sink failures are isolated so one broken sink does not stop the others.
-
-For autostart, install the systemd user unit:
-
-```bash
-mkdir -p ~/.config/systemd/user
-cp systemd/luxctl.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now luxctl.service
-journalctl --user -fu luxctl.service    # watch the live log
-```
+Slack profile becomes `🚫 Reviewing PR #1234`. `luxctl task --clear` removes it.
 
 ## Configuration
 
-`~/.config/luxctl/config.toml` (see `docs/example-config.toml` for a complete annotated copy):
+`~/.config/luxctl/config.toml` (annotated copy at `docs/example-config.toml`):
 
 ```toml
 [daemon]
@@ -154,47 +162,70 @@ busy = ":lock:"
 meeting = ":calendar:"
 ```
 
-Secrets live separately at `~/.config/luxctl/secrets.toml` (the loader refuses anything that isn't `chmod 600`):
+Secrets live separately at `~/.config/luxctl/secrets.toml` (the loader refuses anything not `chmod 600`):
 
 ```toml
 [slack]
 token = "xoxp-..."
 ```
 
-`luxctl slack setup` walks you through creating an internal Slack app and writes this file for you.
+`luxctl slack setup` writes this for you.
 
 ## Source priority
 
-Higher priority wins on ties.
+Higher priority wins when several sources declare at once.
 
-| Source | Default priority | Declares |
+| Source | Priority | Declares |
 | --- | --- | --- |
 | `manual` | 0 | Whatever you set via CLI/tray |
-| `idle` | 10 | `brb` after 5 min of input idleness, `offline` after 30 min |
+| `idle` | 10 | `brb` after N min input idleness, `offline` after M min |
 | `calendar` | 20 | `meeting` while a calendar event is active |
 | `lock` | 30 | `offline` while the screen is locked |
 | `slack` | 40 | `brb` when Slack reports your presence as `away` |
 
-So: lock > slack-away > calendar-meeting > idle-away > whatever you set manually. A locked screen always wins; setting `busy` manually during a calendar event will be overridden the next tick. (The intentional override flow is on the roadmap.)
+A locked screen always wins. Setting `busy` manually during a calendar event will be overridden the next tick. Override semantics ("manual wins for the next 30 min") are on the roadmap.
+
+## Tray indicator
+
+```bash
+luxctl tray
+```
+
+Menu: current state, active task, "Set task..." dialog, four preset groups, Refresh, Quit. To autostart on login, drop a `.desktop` file in `~/.config/autostart/` pointing at `luxctl tray`.
+
+On Wayland the tray needs the **AppIndicator and KStatusNotifierItem Support** GNOME extension; standard on Ubuntu desktops, install with `sudo apt install gnome-shell-extension-appindicator` on stripped-down setups.
+
+## Daemon and autostart
+
+```bash
+luxctl install-service     # writes ~/.config/systemd/user/luxctl.service, enables, starts
+journalctl --user -fu luxctl.service
+```
+
+The unit auto-detects which `luxctl` binary you're running (venv or `~/.local/bin`) and bakes that into `ExecStart`. If you move the install, re-run `luxctl install-service`.
 
 ## Architecture
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the source/sink contract, how to add your own source or sink, and the daemon's resolution loop.
+[ARCHITECTURE.md](ARCHITECTURE.md) covers the source/sink contract, how to add your own, and the daemon's resolution loop.
+
+## Contributing
+
+[CONTRIBUTING.md](CONTRIBUTING.md). Adding a new source or sink is roughly 30 lines plus tests.
 
 ## Development
 
 ```bash
-python -m venv --system-site-packages .venv  # so `import gi` works for tray tests
+python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 pip install -e ".[test,calendar,slack]"
-pytest                  # 127 tests, no hardware or network required
+pytest                         # ~150 tests, no hardware or network required
 ```
 
-Tests use a fake HID device and mocked Slack/iCal — they pass on a CI runner with no Luxafor and no network access.
+Tests use a fake HID device and mocked Slack/iCal; they pass on a clean CI runner with no Luxafor and no internet.
 
 ## Protocol notes
 
-The Flag accepts 8-byte HID command payloads, prefixed by a 1-byte report ID on the wire (so 9 bytes total via hidraw). Byte 0 selects the mode, the rest are mode-specific. Full reference at <https://luxafor.com/hid-flag-api/>; constants are in `luxctl/device.py`.
+The Flag accepts 8-byte HID command payloads, prefixed by a 1-byte report ID on the wire (9 bytes total via hidraw). Byte 0 selects the mode, the rest are mode-specific. Full reference at <https://luxafor.com/hid-flag-api/>; constants are in `luxctl/device.py`.
 
 ## Licence
 

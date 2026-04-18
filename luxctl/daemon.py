@@ -94,7 +94,7 @@ def compose(decl, fallback_status: str = "available") -> ComputedState:
     s = state_module.load()
     active_task = s.active_task if s else None
     if decl is None:
-        # Nothing declared — keep the light at the fallback (or whatever
+        # Nothing declared - keep the light at the fallback (or whatever
         # was last manually set if it's still present in state).
         return ComputedState(
             status=fallback_status,

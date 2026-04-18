@@ -2,9 +2,9 @@
 
 Two TOML files at standard XDG paths:
 
-  ~/.config/luxctl/config.toml   — non-sensitive: which sources/sinks
+  ~/.config/luxctl/config.toml   - non-sensitive: which sources/sinks
                                    are enabled, calendar URL, idle thresholds…
-  ~/.config/luxctl/secrets.toml  — must be chmod 600. Slack tokens etc.
+  ~/.config/luxctl/secrets.toml  - must be chmod 600. Slack tokens etc.
 
 Both are optional. Missing files yield empty dicts; missing keys yield
 sensible defaults.

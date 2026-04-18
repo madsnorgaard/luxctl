@@ -71,12 +71,12 @@ Built-in sources:
 ### Adding a new source
 
 1. Subclass `Source` in a new file under `luxctl/sources/`.
-2. Set `name` and `priority` (slot it between existing ones — see the priority table in the README).
+2. Set `name` and `priority` (slot it between existing ones - see the priority table in the README).
 3. Implement `current()` returning `None` when idle, otherwise a `Declaration`.
 4. If your source has runtime dependencies, lazy-import them inside `__init__` (so `import luxctl.sources` stays cheap) and add an optional extra in `pyproject.toml`.
 5. Register it in `daemon.build_sources()` behind a config flag.
 
-Treat `current()` as cheap and pure — the daemon calls it every tick. Cache anything expensive yourself.
+Treat `current()` as cheap and pure - the daemon calls it every tick. Cache anything expensive yourself.
 
 ## Sinks
 
@@ -102,13 +102,13 @@ Built-in sinks:
 
 ### Adding a new sink
 
-Same shape as a source. Implement `apply()` (idempotent — the daemon only calls it on transitions, but treat repeats as safe) and register it in `daemon.build_sinks()`.
+Same shape as a source. Implement `apply()` (idempotent - the daemon only calls it on transitions, but treat repeats as safe) and register it in `daemon.build_sinks()`.
 
 `apply()` is allowed to raise. The Controller catches the exception, logs it, and continues with the other sinks.
 
 ## Controller
 
-`luxctl/controller.py` owns the device handle and a list of sinks. Used by both the one-shot CLI and the daemon. Its only real job is `apply(current)` — call every sink, isolate failures, persist state.
+`luxctl/controller.py` owns the device handle and a list of sinks. Used by both the one-shot CLI and the daemon. Its only real job is `apply(current)` - call every sink, isolate failures, persist state.
 
 `apply_status()` is sugar for the CLI: validate the preset name, build the `ComputedState`, apply, persist. The `_KEEP_TASK` sentinel is what makes `luxctl status meeting` preserve a task set earlier with `luxctl task "..."`.
 
@@ -145,10 +145,10 @@ Paths follow XDG Base Directory.
 
 Every source and sink takes its expensive collaborator as a constructor argument:
 
-- `LuxaforFlag(device=...)` — pass a fake HID device.
-- `IdleSource(idle_reader=...)` — pass a function returning ms.
-- `SlackSink(client=...)` — pass a `MagicMock`.
-- `CalendarSource(path=...)` — point at a fixture .ics.
+- `LuxaforFlag(device=...)` - pass a fake HID device.
+- `IdleSource(idle_reader=...)` - pass a function returning ms.
+- `SlackSink(client=...)` - pass a `MagicMock`.
+- `CalendarSource(path=...)` - point at a fixture .ics.
 
 That keeps the unit tests:
 - Hardware-free (CI runs them on plain `ubuntu-latest`).
@@ -159,9 +159,9 @@ That keeps the unit tests:
 
 ## Design choices, briefly justified
 
-- **TOML over YAML** — stdlib `tomllib`, no extra dep, less footgun.
-- **Optional extras over hard deps** — keeps `pip install luxctl` light; the user opts into Slack / calendar / tray.
-- **Subprocess `gdbus`/`loginctl` over `dbus-next`** — no python-dbus dep, works on every modern Linux desktop, easy to mock.
-- **asyncio over threads** — single-process, no locking, clean signal handling.
-- **Source priority as a static int** — could be made dynamic (e.g. "manual wins for the next 30 min"), but YAGNI until I actually want it.
-- **Sink failures are logged, not raised** — the daemon stays up if my home wifi blips a Slack call.
+- **TOML over YAML** - stdlib `tomllib`, no extra dep, less footgun.
+- **Optional extras over hard deps** - keeps `pip install luxctl` light; the user opts into Slack / calendar / tray.
+- **Subprocess `gdbus`/`loginctl` over `dbus-next`** - no python-dbus dep, works on every modern Linux desktop, easy to mock.
+- **asyncio over threads** - single-process, no locking, clean signal handling.
+- **Source priority as a static int** - could be made dynamic (e.g. "manual wins for the next 30 min"), but YAGNI until I actually want it.
+- **Sink failures are logged, not raised** - the daemon stays up if my home wifi blips a Slack call.

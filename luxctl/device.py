@@ -57,10 +57,15 @@ class LuxaforFlag:
         try:
             self._device = hid.Device(vid=VENDOR_ID, pid=PRODUCT_ID)
         except (OSError, IOError, hid.HIDException) as exc:
-            raise LuxaforError(
-                "Cannot open Luxafor Flag (04d8:f372). Is it plugged in, "
-                "and is the udev rule installed? See the README."
-            ) from exc
+            # Run a quick diagnostic and put the most likely fix in the
+            # error message, instead of a generic "is it plugged in?".
+            from .diagnostics import diagnose_device, first_failure_hint
+            hint = first_failure_hint(diagnose_device())
+            base = f"Cannot open Luxafor Flag (04d8:f372): {exc}"
+            if hint:
+                base += f"\n  fix: {hint}"
+            base += "\n  full diagnostic: run 'luxctl doctor'"
+            raise LuxaforError(base) from exc
 
     def _write(self, payload: list[int]) -> None:
         body = list(payload) + [0x00] * (PAYLOAD_LENGTH - len(payload))

@@ -1,4 +1,4 @@
-"""luxctl — drive a Luxafor Flag from Linux, plus a presence aggregator."""
+"""luxctl - drive a Luxafor Flag from Linux, plus a presence aggregator."""
 
 from .device import LuxaforError, LuxaforFlag
 from .statuses import STATUSES, register

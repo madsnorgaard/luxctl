@@ -41,7 +41,7 @@ class State:
         what = self.status if self.status else (
             f"rgb({self.rgb[0]},{self.rgb[1]},{self.rgb[2]})" if self.rgb else "?"
         )
-        task = f" — task: {self.active_task!r}" if self.active_task else ""
+        task = f" - task: {self.active_task!r}" if self.active_task else ""
         return f"{what} (via {self.source} at {self.set_at}){task}"
 
 

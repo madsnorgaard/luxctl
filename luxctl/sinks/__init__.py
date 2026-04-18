@@ -6,9 +6,9 @@ changes.
 
 Today's sinks:
 
-  * `LuxaforSink` — drives the physical light.
-  * `LogSink` — appends every transition to ~/.local/state/luxctl/log.jsonl.
-  * `SlackSink` — sets Slack status text + emoji + DND.
+  * `LuxaforSink` - drives the physical light.
+  * `LogSink` - appends every transition to ~/.local/state/luxctl/log.jsonl.
+  * `SlackSink` - sets Slack status text + emoji + DND.
 
 A sink that fails (network down, device unplugged, …) is logged but
 does not stop other sinks from receiving the state.
@@ -26,7 +26,7 @@ class Sink(ABC):
 
     @abstractmethod
     def apply(self, current: ComputedState) -> None:
-        """Reflect the resolved state. Idempotent — called repeatedly,
+        """Reflect the resolved state. Idempotent - called repeatedly,
         but the daemon only calls it when the state has actually changed."""
 
     def close(self) -> None:

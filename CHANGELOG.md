@@ -4,7 +4,24 @@ All notable changes to luxctl. Format loosely follows [Keep a Changelog](https:/
 
 ## [Unreleased]
 
-## [0.2.0] — 2026-04-18
+### Added
+
+- **`luxctl init`**: interactive first-run wizard. Seeds config, optional idle-threshold tuning, optional calendar URL, optional Slack setup, optional systemd autostart.
+- **`luxctl doctor`**: end-to-end diagnostic. Audits Python version, hidapi presence, lsusb, hidraw node + permissions, config validity, secrets file mode, optional integration availability, and systemd service status. Prints fix-it hints for every failure.
+- **`luxctl install-service` / `uninstall-service` / `service-status`**: writes `~/.config/systemd/user/luxctl.service` with the correct `ExecStart` for the actual install path (venv, `~/.local/bin`, or wherever luxctl is on PATH), then enables and starts. No more shell incantations.
+- **`luxctl stats [--week | --days N]`**: parses the transition log and prints time spent per status with percentages.
+- **Custom presets via config**: `[presets.<name>]` blocks in `config.toml` register new presets without writing Python. Supports `static`, `fade`, `strobe`, `wave`, `pattern`. Re-using a built-in name overrides it.
+- **Shell completion**: `argcomplete` integration when installed (`pip install '.[completion]'`). One-line activation per shell, see README.
+- **Better device error messages**: when `LuxaforFlag()` fails, runs the doctor's device checks and embeds the most likely fix in the exception, instead of a generic "is it plugged in?".
+- **CONTRIBUTING.md** with a worked example of adding a new source.
+- **`examples/custom_source.py`** as a copy-paste starting point.
+
+### Changed
+
+- README rewritten for general-audience use: less personal voice, more "what this is and how to use it on your own machine".
+- Removed em dashes throughout the codebase and docs.
+
+## [0.2.0] - 2026-04-18
 
 The "presence aggregator" release. luxctl is no longer just a fancy CLI for
 the Luxafor; it now resolves presence from multiple sources and reflects the
@@ -16,16 +33,16 @@ result through multiple sinks (Luxafor, Slack, log).
   - `Source` ABC + `resolve(sources)` priority resolver.
   - `Sink` ABC; sink failures are isolated by the Controller.
 - **Local sources** (no API keys):
-  - `IdleSource` — Mutter idle monitor (Wayland) / xprintidle (X11).
-  - `LockSource` — logind `LockedHint`.
-  - `CalendarSource` — iCal feed via `icalendar`, optional RRULE expansion.
+  - `IdleSource` - Mutter idle monitor (Wayland) / xprintidle (X11).
+  - `LockSource` - logind `LockedHint`.
+  - `CalendarSource` - iCal feed via `icalendar`, optional RRULE expansion.
 - **Slack integration** (`pip install '.[slack]'`):
-  - `SlackSink` — sets `users.profile.set` (text + emoji) and DND.
-  - `SlackSource` — polls `users.getPresence`.
+  - `SlackSink` - sets `users.profile.set` (text + emoji) and DND.
+  - `SlackSource` - polls `users.getPresence`.
   - `luxctl slack setup` walks token creation; `slack test` verifies; `slack push` fires the current state.
-- **Daemon** (`luxctl daemon`) — asyncio loop with signal-driven shutdown.
+- **Daemon** (`luxctl daemon`) - asyncio loop with signal-driven shutdown.
 - **systemd user unit** (`systemd/luxctl.service`).
-- **Active task** field — free-form text that flows into Slack `status_text`. `luxctl task "..."`, `luxctl task --clear`.
+- **Active task** field - free-form text that flows into Slack `status_text`. `luxctl task "..."`, `luxctl task --clear`.
 - **Config + secrets** (`~/.config/luxctl/config.toml`, `secrets.toml`). Secrets must be `chmod 600`.
 - **`luxctl current`** to print the persisted state.
 - **`luxctl logs -f`** to tail transitions.
@@ -43,7 +60,7 @@ result through multiple sinks (Luxafor, Slack, log).
 
 - `LuxaforFlag.__init__` previously called the legacy `hid.device()` API; now uses `hid.Device(vid, pid)` from the modern `hid` package.
 
-## [0.1.0] — 2026-04-18
+## [0.1.0] - 2026-04-18
 
 Initial release.
 

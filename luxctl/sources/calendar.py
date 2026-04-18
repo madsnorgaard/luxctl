@@ -1,11 +1,11 @@
 """CalendarSource: read an iCal feed and declare 'meeting' during events.
 
 Pass either:
-- `url` — an HTTPS iCal feed (Google Calendar's "secret address in iCal
+- `url` - an HTTPS iCal feed (Google Calendar's "secret address in iCal
   format", Outlook published calendar, Fastmail, etc.). The URL is
   fetched on each `current()` call but the parsed result is cached for
   `cache_seconds` to avoid hammering the server.
-- `path` — a local .ics file (handy for tests).
+- `path` - a local .ics file (handy for tests).
 
 Recurring events are expanded with `recurring-ical-events` if installed,
 otherwise only non-recurring events are honoured (a clear log warning is
@@ -47,7 +47,7 @@ def _ensure_aware(dt) -> datetime:
         if dt.tzinfo is None:
             return dt.replace(tzinfo=timezone.utc)
         return dt
-    # `date` (all-day) — represent as midnight UTC
+    # `date` (all-day) - represent as midnight UTC
     return datetime(dt.year, dt.month, dt.day, tzinfo=timezone.utc)
 
 
@@ -103,7 +103,7 @@ class CalendarSource(Source):
     def _expand_events(self, cal_bytes: bytes, now: datetime) -> Iterable:
         cal = Calendar.from_ical(cal_bytes)
         if _HAVE_RECURRING:
-            # Look 1 minute either side of now — covers the active event(s).
+            # Look 1 minute either side of now - covers the active event(s).
             from datetime import timedelta
             return recurring_ical_events.of(cal).between(
                 now - timedelta(minutes=1), now + timedelta(minutes=1)

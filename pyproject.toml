@@ -29,14 +29,15 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest>=7"]
 # Tray indicator. PyGObject + AppIndicator are best installed as system
-# packages on Ubuntu/Debian (see README), not via pip — listed here so
+# packages on Ubuntu/Debian (see README), not via pip - listed here so
 # that `pip install ".[tray]"` still works on systems where they are.
 tray = ["PyGObject>=3.42"]
 # CalendarSource: iCal parsing. recurring-ical-events handles RRULE.
 calendar = ["icalendar>=5", "recurring-ical-events>=2"]
 # SlackSink + SlackSource: official slack_sdk.
 slack = ["slack-sdk>=3"]
-all = ["luxctl[tray,calendar,slack]"]
+completion = ["argcomplete>=3"]
+all = ["luxctl[tray,calendar,slack,completion]"]
 
 [project.scripts]
 luxctl = "luxctl.cli:main"

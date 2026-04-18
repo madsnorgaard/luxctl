@@ -158,7 +158,7 @@ def test_build_sources_skips_calendar_without_url():
 
 
 def test_build_sinks_default_is_luxafor_and_log(monkeypatch):
-    # LuxaforSink will try to open the device — patch it out.
+    # LuxaforSink will try to open the device - patch it out.
     from luxctl import sinks
     class FakeLuxaforSink:
         name = "luxafor"

@@ -1,4 +1,4 @@
-"""Tests for the Controller — apply state to multiple sinks at once."""
+"""Tests for the Controller - apply state to multiple sinks at once."""
 
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ def test_apply_status_preserves_existing_task(fake_hid):
     light = LuxaforFlag(device=fake_hid)
     ctrl = Controller(sinks=[LuxaforSink(light=light)])
     ctrl.apply_status("busy", source="cli", active_task="Writing tests")
-    # Now apply a different status without specifying task — task should persist.
+    # Now apply a different status without specifying task - task should persist.
     ctrl.apply_status("meeting", source="cli")
     assert state_module.load().active_task == "Writing tests"
 

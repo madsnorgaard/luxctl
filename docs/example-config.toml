@@ -33,7 +33,7 @@ cache_seconds = 60
 
 [slack]
 # Reads your Slack presence (active/away) AND writes your Slack profile
-# (status text + emoji + DND). Token lives in secrets.toml — run:
+# (status text + emoji + DND). Token lives in secrets.toml - run:
 #   luxctl slack setup
 enabled = false
 poll_seconds = 30
@@ -47,3 +47,34 @@ set_dnd_for = ["stressed", "dnd", "on-fire"]
 busy = ":lock:"
 meeting = ":calendar:"
 "deep-work" = ":headphones:"
+
+# --- Custom presets -----------------------------------------------------
+#
+# Add as many [presets.<name>] blocks as you like. Each one becomes a
+# selectable status (`luxctl status <name>`) and shows up in the tray
+# menu and stats. Re-using a built-in name (busy, meeting, ...) overrides
+# the built-in.
+#
+# Supported keys per preset:
+#   static  = [r, g, b]          solid colour
+#   fade    = [r, g, b]          fade to colour
+#   strobe  = [r, g, b]          strobing
+#   wave    = [r, g, b]          wave animation
+#   pattern = N (1-8)            built-in firmware pattern (5 = police siren)
+# Modifiers (where applicable):
+#   speed = N    repeat = N    wave_type = N (1-5)
+# Plus an optional `description = "..."` shown in `luxctl list`.
+
+# [presets.coding]
+# static = [50, 200, 50]
+# description = "Solid green-ish, hands on the keyboard."
+
+# [presets.urgent]
+# strobe = [255, 0, 0]
+# speed = 5
+# repeat = 30
+
+# [presets.afk-but-online]
+# fade = [80, 80, 80]
+# speed = 60
+# description = "Faint grey pulse."

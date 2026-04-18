@@ -6,11 +6,27 @@ import argparse
 import sys
 
 from . import __version__
+from . import config as config_module
 from . import state as state_module
 from .controller import Controller
 from .device import LuxaforError
 from .state import State
-from .statuses import STATUSES
+from .statuses import STATUSES, load_from_config
+
+
+def _register_custom_presets() -> None:
+    """Pick up [presets.*] blocks from config.toml so completion + dispatch
+    see them. Silent if config doesn't exist or has no presets."""
+    try:
+        raw = config_module.load_config()
+    except Exception:
+        return
+    presets = raw.get("presets", {})
+    if isinstance(presets, dict) and presets:
+        load_from_config(presets)
+
+
+_register_custom_presets()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -60,8 +76,28 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("daemon", help="Run the presence-aggregator daemon.")
 
+    sub.add_parser("init", help="First-run interactive setup wizard.")
+    sub.add_parser("doctor", help="Diagnose installation and config issues.")
+
+    install = sub.add_parser("install-service", help="Install + enable + start the systemd user service.")
+    install.add_argument("--no-start", action="store_true", help="Install + enable, but do not start now.")
+    install.add_argument("--no-enable", action="store_true", help="Install only, do not enable on login.")
+    sub.add_parser("uninstall-service", help="Stop, disable, and remove the systemd user service.")
+    sub.add_parser("service-status", help="Print whether the systemd user service is installed/active.")
+
+    stats = sub.add_parser("stats", help="Time spent per status from the transition log.")
+    stats.add_argument("--week", action="store_true", help="Last 7 days instead of today.")
+    stats.add_argument("--days", type=int, default=0, help="Last N days (overrides --week).")
+
     from .slack_cli import add_slack_subparser
     add_slack_subparser(sub)
+
+    # Optional: tab-completion if argcomplete is installed.
+    try:
+        import argcomplete  # type: ignore[import-untyped]
+        argcomplete.autocomplete(parser)
+    except ImportError:
+        pass
 
     return parser
 
@@ -153,6 +189,31 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "slack":
         return args.handler(args)
+
+    if args.command == "init":
+        from .init_cli import run as init_run
+        return init_run()
+
+    if args.command == "doctor":
+        from .doctor import run as doctor_run
+        return doctor_run()
+
+    if args.command == "install-service":
+        from .service import install as svc_install
+        return svc_install(enable=not args.no_enable, start=not args.no_start)
+
+    if args.command == "uninstall-service":
+        from .service import uninstall as svc_uninstall
+        return svc_uninstall()
+
+    if args.command == "service-status":
+        from .service import status as svc_status
+        return svc_status()
+
+    if args.command == "stats":
+        from .stats import run as stats_run
+        period = "week" if args.week else "today"
+        return stats_run(period=period, days=args.days)
 
     try:
         with Controller() as ctrl:

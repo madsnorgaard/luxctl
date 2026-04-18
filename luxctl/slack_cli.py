@@ -1,4 +1,4 @@
-"""`luxctl slack <subcommand>` — token setup, connectivity test, status push."""
+"""`luxctl slack <subcommand>` - token setup, connectivity test, status push."""
 
 from __future__ import annotations
 
@@ -63,7 +63,7 @@ def cmd_test(_args) -> int:
     except SlackApiError as exc:
         print(f"luxctl: Slack rejected the token: {exc.response['error']}", file=sys.stderr)
         return 1
-    print(f"OK — authed as {auth['user']} in workspace {auth['team']}")
+    print(f"OK - authed as {auth['user']} in workspace {auth['team']}")
     return 0
 
 
@@ -93,7 +93,7 @@ def cmd_push(args) -> int:
         source=s.source,
         active_task=s.active_task,
     ))
-    print(f"OK — pushed {s.status} to Slack")
+    print(f"OK - pushed {s.status} to Slack")
     return 0
 
 

@@ -6,7 +6,7 @@ Optional. Requires:
 
 The tray menu shows the current state and active task at the top, then
 groups of status presets, then Off / Quit. Clicking a preset applies it
-through the Controller (so all configured sinks fire — Luxafor, log,
+through the Controller (so all configured sinks fire - Luxafor, log,
 Slack if enabled).
 """
 
