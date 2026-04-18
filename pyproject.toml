@@ -29,6 +29,9 @@ test = ["pytest>=7"]
 # packages on Ubuntu/Debian (see README), not via pip — listed here so
 # that `pip install ".[tray]"` still works on systems where they are.
 tray = ["PyGObject>=3.42"]
+# CalendarSource: iCal parsing. recurring-ical-events handles RRULE.
+calendar = ["icalendar>=5", "recurring-ical-events>=2"]
+all = ["luxctl[tray,calendar]"]
 
 [project.scripts]
 luxctl = "luxctl.cli:main"

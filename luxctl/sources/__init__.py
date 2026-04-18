@@ -52,5 +52,21 @@ def resolve(sources: list[Source]) -> Optional[Declaration]:
 
 
 from .manual import ManualSource  # noqa: E402
+from .idle import IdleSource  # noqa: E402
+from .lock import LockSource  # noqa: E402
 
-__all__ = ["Source", "Declaration", "ManualSource", "resolve"]
+__all__ = [
+    "Source",
+    "Declaration",
+    "ManualSource",
+    "IdleSource",
+    "LockSource",
+    "resolve",
+]
+
+# CalendarSource is imported lazily because `icalendar` is an optional dep.
+def __getattr__(name):
+    if name == "CalendarSource":
+        from .calendar import CalendarSource as _CS
+        return _CS
+    raise AttributeError(name)
