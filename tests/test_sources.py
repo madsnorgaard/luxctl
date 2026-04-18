@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-from luxctl.sources import Declaration, ManualSource, Source, resolve
+from luxctl.sources import ManualSource, Source, resolve
+from luxctl.types import Declaration
 
 
 class FixedSource(Source):
@@ -59,12 +60,28 @@ def test_manual_source_reads_persisted_state(tmp_path, monkeypatch):
     path = tmp_path / "state.json"
     monkeypatch.setattr("luxctl.state._default_path", lambda: path)
     state_module.save(
-        State(source="manual", set_at="2026-04-18T15:00:00+00:00", status="busy")
+        State(source="cli", set_at="2026-04-18T15:00:00+00:00", status="busy")
     )
     decl = ManualSource().current()
     assert decl is not None
     assert decl.status == "busy"
     assert decl.source == "manual"
+
+
+def test_manual_source_includes_active_task_as_detail(tmp_path, monkeypatch):
+    from luxctl import state as state_module
+    from luxctl.state import State
+
+    path = tmp_path / "state.json"
+    monkeypatch.setattr("luxctl.state._default_path", lambda: path)
+    state_module.save(State(
+        source="tray",
+        set_at="2026-04-18T15:00:00+00:00",
+        status="busy",
+        active_task="Reviewing PR #123",
+    ))
+    decl = ManualSource().current()
+    assert decl.detail == "Reviewing PR #123"
 
 
 def test_manual_source_ignores_state_from_another_source(tmp_path, monkeypatch):
