@@ -1,0 +1,49 @@
+# Example luxctl configuration.
+#
+# Copy to ~/.config/luxctl/config.toml and edit. Every section is
+# optional; missing keys fall back to the defaults shown here.
+
+[daemon]
+# How often the daemon polls all sources and re-resolves state.
+# Lower = more responsive, but more API calls (Slack rate-limits at
+# ~50/min on tier-3, so don't drop poll_seconds below 2 unless you
+# also bump [slack].poll_seconds).
+tick_seconds = 5
+
+# --- Sources ------------------------------------------------------------
+
+[idle]
+# Declares "brb" after `away_minutes` of input idleness, "offline" after
+# `offline_minutes`. Works on Wayland (gdbus → Mutter) and X11 (xprintidle).
+enabled = true
+away_minutes = 5
+offline_minutes = 30
+
+[lock]
+# Declares "offline" while your screen is locked (logind LockedHint).
+enabled = true
+
+[calendar]
+# Declares "meeting" during any active iCal event.
+# Get the URL from Google Calendar → Settings → "Secret address in iCal
+# format", or from your work calendar's published feed.
+enabled = false
+url = "https://calendar.google.com/calendar/ical/REPLACE_ME/basic.ics"
+cache_seconds = 60
+
+[slack]
+# Reads your Slack presence (active/away) AND writes your Slack profile
+# (status text + emoji + DND). Token lives in secrets.toml — run:
+#   luxctl slack setup
+enabled = false
+poll_seconds = 30
+# Statuses for which the daemon should also engage Slack DND. The DND is
+# released the moment you flip away from these statuses.
+set_dnd_for = ["stressed", "dnd", "on-fire"]
+
+# Override the default emoji for any preset. Anything not listed here
+# uses luxctl/sinks/slack.py:DEFAULT_EMOJI_MAP.
+[slack.emoji_map]
+busy = ":lock:"
+meeting = ":calendar:"
+"deep-work" = ":headphones:"
