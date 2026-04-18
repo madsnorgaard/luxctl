@@ -1,0 +1,5 @@
+# Luxafor Flag (USB HID, vendor 04d8 product f372).
+# Allow the `plugdev` group to read/write the device without sudo.
+# Both rules are present so it works whether hidapi binds via libusb or hidraw.
+SUBSYSTEM=="usb", ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="f372", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="f372", MODE="0660", GROUP="plugdev", TAG+="uaccess"

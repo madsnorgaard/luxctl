@@ -1,0 +1,48 @@
+[project]
+name = "luxctl"
+version = "0.1.0"
+description = "Drive a Luxafor Flag from Linux with fun status presets."
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.10"
+authors = [{ name = "Mads Norgaard" }]
+keywords = ["luxafor", "flag", "usb", "hid", "status", "linux", "presence"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Hardware",
+]
+dependencies = ["hid>=1.0.6"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+# Tray indicator. PyGObject + AppIndicator are best installed as system
+# packages on Ubuntu/Debian (see README), not via pip — listed here so
+# that `pip install ".[tray]"` still works on systems where they are.
+tray = ["PyGObject>=3.42"]
+
+[project.scripts]
+luxctl = "luxctl.cli:main"
+
+[project.urls]
+Repository = "https://github.com/madsnorgaard/luxctl"
+Issues = "https://github.com/madsnorgaard/luxctl/issues"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["luxctl*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
