@@ -1,0 +1,17 @@
+[Unit]
+Description=luxctl presence-aggregator daemon
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/luxctl daemon
+Restart=on-failure
+RestartSec=5
+# Keep the daemon's logs out of /tmp; let journald collect stdout/stderr.
+StandardOutput=journal
+StandardError=journal
+Environment=LUXCTL_LOG=INFO
+
+[Install]
+WantedBy=graphical-session.target
